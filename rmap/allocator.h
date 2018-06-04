@@ -1,3 +1,10 @@
+#ifndef ALLOCATOR_H_
+#define ALLOCATOR_H_
+
+#include <stddef.h>
+#include <stdlib.h>
+#include <string.h>
+
 #define unlikely(x) __builtin_expect(!!(x), 0)
 #define BLOCK_SIZE 128
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
@@ -6,7 +13,7 @@
 template <typename T>
 class Allocator {
  public:
-  Allocator() : size_(0), capacity_(BLOCK_SIZE) {
+  Allocator() : size_(1), capacity_(BLOCK_SIZE), count_(0) {
     buffer_ = reinterpret_cast<T *>(malloc(BLOCK_SIZE * sizeof(T)));
   }
 
@@ -16,7 +23,11 @@ class Allocator {
     }
   }
 
-  T *Header() { return buffer_; }
+  T *HeadPtr() { return buffer_; }
+
+  T &Header() { return buffer_[0]; }
+
+  T &_M_header() { return buffer_[0]; }
 
   T *GetNode() {
     if (size_ == capacity_) {
@@ -25,16 +36,21 @@ class Allocator {
     return &buffer_[size_++];
   }
 
-  ptrdiff_t GetNodeOffset() {
-    if (size_ == capacity_) {
-      extend(capacity_ << 1);
-    }
-    return &buffer_[size_++] - &buffer_[0];
+  ptrdiff_t Ptr2Offset(T *ptr) { return ptr ? ptr - buffer_ : -1; }
+
+  T *Offset2Ptr(ptrdiff_t offset) {
+    return offset == -1 ? NULL : buffer_ + offset;
   }
 
-  T *OffsetToPtr(ptrdiff_t offset) { return buffer_ + offset; }
+  inline T &operator[](size_t loc) { return buffer_[loc]; }
 
-  ptrdiff_t PtrToOffset(T *ptr) { return ptr - buffer_; }
+  inline size_t Size() const { return size_; }
+
+  inline size_t Capacity() const { return capacity_; }
+
+  inline int Count() const { return count_; }
+  inline void Dec() { --count_; }
+  inline void Inc() { ++count_; }
 
  private:
   inline void extend(size_t new_capacity) {
@@ -57,4 +73,8 @@ class Allocator {
 
   T *buffer_;
   size_t size_, capacity_;
+
+  int count_;
 };
+
+#endif
