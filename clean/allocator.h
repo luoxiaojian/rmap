@@ -2,6 +2,7 @@
 #define ALLOCATOR_H_
 
 #include <stdlib.h>
+#include <stddef.h>
 
 #define unlikely(x) __builtin_expect(!!(x), 0)
 #define BLOCK_SIZE 128

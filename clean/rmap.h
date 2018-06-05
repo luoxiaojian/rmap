@@ -4,7 +4,13 @@
 #include "allocator.h"
 #include "rb_tree.h"
 
-template <typename _Key, typename _Tp, typename _Compare = std::less<_Key>>
+template <typename _Pair>
+struct S1st {
+  typename _Pair::first_type& operator()(_Pair& __x) const { return __x.first; }
+  const typename _Pair::first_type& operator()(const _Pair& __x) const { return __x.first; }
+};
+
+template <typename _Key, typename _Tp, typename _Compare = std::less<_Key> >
 class rmap {
  public:
   typedef _Key key_type;
@@ -29,9 +35,9 @@ class rmap {
   };
 
  private:
-  typedef _Rb_tree<key_type, value_type, _Select1st<value_type>, key_compare>
+  typedef _Rb_tree<key_type, value_type, S1st<value_type>, key_compare>
       _Rep_type;
-  typedef Allocator<_Rb_tree_node<value_type>> _Alloc_type;
+  typedef Allocator<_Rb_tree_node<value_type> > _Alloc_type;
 
   _Rep_type _M_t;
   _Alloc_type _M_alloc;
@@ -74,6 +80,10 @@ class rmap {
 
   std::pair<iterator, bool> insert(const value_type& __x) {
     return _M_t._M_insert_unique(__x);
+  }
+
+  iterator insert(iterator __position, const value_type& __x) {
+    return _M_t._M_insert_unique_(__position, __x);
   }
 
   size_type erase(const key_type& __x) { return _M_t.erase(__x); }
