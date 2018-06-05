@@ -3,6 +3,7 @@
 
 #include <stdlib.h>
 #include <stddef.h>
+#include <string.h>
 
 #define unlikely(x) __builtin_expect(!!(x), 0)
 #define BLOCK_SIZE 128
