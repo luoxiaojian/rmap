@@ -66,8 +66,6 @@ struct _Rb_tree_node {
   void SetParent(_Link_type ptr) { _M_parent = ptr ? ptr - this : 0; }
 
   void SetParent(_Const_Link_type ptr) { _M_parent = ptr ? ptr - this : 0; }
-
-  void SetColor(_Rb_tree_color color) { _M_color = color; }
 };
 
 template <typename _Val>
@@ -777,9 +775,6 @@ _Rb_tree<_Key, _Val, _KeyOfValue, _Compare>::count(const _Key& __k) const {
   return __n;
 }
 
-unsigned int _Rb_tree_black_count(const _Rb_tree_node_base* __node,
-                                  const _Rb_tree_node_base* __root) throw();
-
 template <typename _Key, typename _Val, typename _KeyOfValue, typename _Compare>
 bool _Rb_tree<_Key, _Val, _KeyOfValue, _Compare>::__rb_verify() const {
   if (_M_impl._M_node_count == 0 || begin() == end())
@@ -787,7 +782,7 @@ bool _Rb_tree<_Key, _Val, _KeyOfValue, _Compare>::__rb_verify() const {
            this->alloc_.Header().left() == _M_end() &&
            this->alloc_.Header().right() == _M_end();
 
-  unsigned int __len = _Rb_tree_black_count(_M_leftmost(), _M_root());
+  unsigned int __len = _Rb_tree_black_count<_Val>(_M_leftmost(), _M_root());
   for (const_iterator __it = begin(); __it != end(); ++__it) {
     _Const_Link_type __x = static_cast<_Const_Link_type>(__it._M_node);
     _Const_Link_type __L = _S_left(__x);
@@ -800,7 +795,7 @@ bool _Rb_tree<_Key, _Val, _KeyOfValue, _Compare>::__rb_verify() const {
     if (__L && _M_key_compare(_S_key(__x), _S_key(__L))) return false;
     if (__R && _M_key_compare(_S_key(__R), _S_key(__x))) return false;
 
-    if (!__L && !__R && _Rb_tree_black_count(__x, _M_root()) != __len)
+    if (!__L && !__R && _Rb_tree_black_count<_Val>(__x, _M_root()) != __len)
       return false;
   }
 
@@ -859,7 +854,7 @@ void _Rb_tree_insert_and_rebalance(const bool __insert_left,
   __x->SetParent(__p);
   __x->SetLeft(NULL);
   __x->SetRight(NULL);
-  __x->SetColor(_S_red);
+  __x->_M_color = _S_red;
 
   if (__insert_left) {
     __p->SetLeft(__x);
@@ -881,38 +876,38 @@ void _Rb_tree_insert_and_rebalance(const bool __insert_left,
     if (__x->parent() == _xpp->left()) {
       _Rb_tree_node<_Val>* const __y = __xpp->right();
       if (__y && __y->_M_color == _S_red) {
-        __x->parent()->SetColor(_S_black);
-        __y->SetColor(_S_black);
-        __xpp->SetColor(_S_red);
+        __x->parent()->_M_color = _S_black;
+        __y->_M_color = _S_black;
+        __xpp->_M_color = _S_red;
         __x = __xpp;
       } else {
         if (__x == __x->parent()->right()) {
           __x = __x->parent();
           _Rb_tree_rotate_left<_Val>(__x, __header);
         }
-        __x->parent()->SetColor(_S_black);
-        __xpp->SetColor(_S_red);
+        __x->parent()->_M_color = _S_black;
+        __xpp->_M_color = _S_red;
         _Rb_tree_rotate_right<_Val>(__xpp, __header);
       }
     } else {
       _Rb_tree_node<_Val>* const __y = __xpp->left();
       if (__y && __y->_M_color == _S_red) {
-        __x->parent()->SetColor(_S_black);
-        __y->SetColor(_S_black);
-        __xpp->SetColor(_S_red);
+        __x->parent()->_M_color = _S_black;
+        __y->_M_color = _S_black;
+        __xpp->_M_color = _S_red;
         __x = __xpp;
       } else {
         if (__x == __x->parent()->left()) {
           __x = __x->parent();
           _Rb_tree_rotate_right<_Val>(__x, __header);
         }
-        __x->parent()->SetColor(_S_black);
-        __xpp->SetColor(_S_red);
+        __x->parent()->_M_color = _S_black;
+        __xpp->_M_color = _S_red;
         _Rb_tree_rotate_left<_Val>(__xpp, __header);
       }
     }
   }
-  __root->SetColor(_S_black);
+  __root->_M_color = _S_black;
 }
 
 template <typename _Val>
@@ -1007,13 +1002,13 @@ _Rb_tree_node<_Val>* _Rb_tree_rebalance_for_erase(
           __x_parent = __x_parent->parent();
         } else {
           if (__w->_M_right == 0 || __w->right()->_M_color == _S_black) {
-            __w->left()->SetColor(_S_black);
-            __w->SetColor(_S_red);
+            __w->left()->_M_color = _S_black;
+            __w->_M_color = _S_red;
             local_Rb_tree_rotate_right(__w, __header);
             __w = __x_parent->right();
           }
-          __w->SetColor(__x_parent->_M_color);
-          __x_parent->SetColor(_S_black);
+          __w->_M_color = __x_parent->_M_color;
+          __x_parent->_M_color = _S_black;
           if (__w->_M_right) __w->right()->_M_color = _S_black;
           local_Rb_tree_rotate_left(__x_parent, __header);
           break;
