@@ -7,7 +7,9 @@
 template <typename _Pair>
 struct S1st {
   typename _Pair::first_type& operator()(_Pair& __x) const { return __x.first; }
-  const typename _Pair::first_type& operator()(const _Pair& __x) const { return __x.first; }
+  const typename _Pair::first_type& operator()(const _Pair& __x) const {
+    return __x.first;
+  }
 };
 
 template <typename _Key, typename _Tp, typename _Compare = std::less<_Key> >

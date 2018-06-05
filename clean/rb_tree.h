@@ -1,13 +1,14 @@
 #ifndef RB_TREE_H_
 #define RB_TREE_H_
 
-#include <utility>
 #include <iterator>
+#include <utility>
 
 #include "allocator.h"
 
-enum _Rb_tree_color { _S_red = false, _S_black = true };
+// #define USE_OFFSET
 
+enum _Rb_tree_color { _S_red = false, _S_black = true };
 
 template <typename _Val>
 struct _Rb_tree_node {
@@ -41,14 +42,14 @@ struct _Rb_tree_node {
     return __x;
   }
 
-  _Val* _M_valptr() { 
+  _Val* _M_valptr() {
     return &_M_value_field;
-    // return std::__addressof(_M_value_field); 
+    // return std::__addressof(_M_value_field);
   }
 
-  const _Val* _M_valptr() const { 
+  const _Val* _M_valptr() const {
     return &_M_value_field;
-    // return std::__addressof(_M_value_field); 
+    // return std::__addressof(_M_value_field);
   }
 
   _Link_type parent() { return _M_parent ? this + _M_parent : NULL; }
@@ -402,14 +403,21 @@ class _Rb_tree {
 
   iterator _M_insert_unique_(const_iterator __position, const value_type& __x);
 
-  std::pair<ptrdiff_t, ptrdiff_t> _M_get_insert_hint_unique_pos_offset(const_iterator __pos, const key_type& __k);
-
  private:
+#ifdef USE_OFFSET
   std::pair<ptrdiff_t, ptrdiff_t> _M_get_insert_unique_pos_offset(
       const key_type& __k);
-
+  std::pair<ptrdiff_t, ptrdiff_t> _M_get_insert_hint_unique_pos_offset(
+      const_iterator __pos, const key_type& __k);
   iterator _M_insert_offset_(ptrdiff_t __x, ptrdiff_t __y,
                              const value_type& __v);
+#else
+  std::pair<_Link_type, _Link_type> _M_get_insert_unique_pos(
+      const key_type& __k);
+  std::pair<_Link_type, _Link_type> _M_get_insert_hint_unique_pos(
+      const_iterator __pos, const key_type& __k);
+  iterator _M_insert_(_Link_type __x, _Link_type __y, const value_type& __v);
+#endif
 
   _Link_type _M_copy(_Const_Link_type __x, _Link_type __p);
 
@@ -518,7 +526,8 @@ class _Rb_tree {
 
   std::pair<iterator, iterator> equal_range(const key_type& __k);
 
-  std::pair<const_iterator, const_iterator> equal_range(const key_type& __k) const;
+  std::pair<const_iterator, const_iterator> equal_range(
+      const key_type& __k) const;
 
   // Debugging.
   // bool __rb_verify() const;
@@ -605,7 +614,7 @@ _Rb_tree<_Key, _Val, _KeyOfValue, _Compare>::_M_upper_bound(
 
 template <typename _Key, typename _Val, typename _KeyOfValue, typename _Compare>
 std::pair<typename _Rb_tree<_Key, _Val, _KeyOfValue, _Compare>::iterator,
-     typename _Rb_tree<_Key, _Val, _KeyOfValue, _Compare>::iterator>
+          typename _Rb_tree<_Key, _Val, _KeyOfValue, _Compare>::iterator>
 _Rb_tree<_Key, _Val, _KeyOfValue, _Compare>::equal_range(const _Key& __k) {
   _Link_type __x = _M_begin();
   _Link_type __y = _M_end();
@@ -619,7 +628,7 @@ _Rb_tree<_Key, _Val, _KeyOfValue, _Compare>::equal_range(const _Key& __k) {
       __y = __x, __x = _S_left(__x);
       __xu = _S_right(__xu);
       return std::pair<iterator, iterator>(_M_lower_bound(__x, __y, __k),
-                                      _M_upper_bound(__xu, __yu, __k));
+                                           _M_upper_bound(__xu, __yu, __k));
     }
   }
   return std::pair<iterator, iterator>(iterator(__y), iterator(__y));
@@ -627,7 +636,7 @@ _Rb_tree<_Key, _Val, _KeyOfValue, _Compare>::equal_range(const _Key& __k) {
 
 template <typename _Key, typename _Val, typename _KeyOfValue, typename _Compare>
 std::pair<typename _Rb_tree<_Key, _Val, _KeyOfValue, _Compare>::const_iterator,
-     typename _Rb_tree<_Key, _Val, _KeyOfValue, _Compare>::const_iterator>
+          typename _Rb_tree<_Key, _Val, _KeyOfValue, _Compare>::const_iterator>
 _Rb_tree<_Key, _Val, _KeyOfValue, _Compare>::equal_range(
     const _Key& __k) const {
   _Const_Link_type __x = _M_begin();
@@ -646,7 +655,7 @@ _Rb_tree<_Key, _Val, _KeyOfValue, _Compare>::equal_range(
     }
   }
   return std::pair<const_iterator, const_iterator>(const_iterator(__y),
-                                              const_iterator(__y));
+                                                   const_iterator(__y));
 }
 
 template <typename _Key, typename _Val, typename _KeyOfValue, typename _Compare>
@@ -685,53 +694,49 @@ void _Rb_tree<_Key, _Val, _KeyOfValue, _Compare>::swap(
 }
 
 template <typename _Key, typename _Val, typename _KeyOfValue, typename _Compare>
-std::pair<ptrdiff_t, ptrdiff_t>
-_Rb_tree<_Key, _Val, _KeyOfValue, _Compare>::_M_get_insert_hint_unique_pos_offset(
-const_iterator __position, const key_type& __k) {
-iterator __pos = __position._M_const_cast();
-typedef std::pair<ptrdiff_t, ptrdiff_t> _Res;
-if(__pos._M_node == _M_end()) {
-if(size() > 0 && _M_key_compare(_S_key(_M_rightmost()), __k)) {
-return _Res(-1, this->alloc_.Ptr2Offset(_M_rightmost()));
-}
-else {
-return _M_get_insert_unique_pos_offset(__k);
-}
-} else if(_M_key_compare(__k, _S_key(__pos._M_node))) {
+std::pair<typename _Rb_tree<_Key, _Val, _KeyOfValue, _Compare>::iterator, bool>
+_Rb_tree<_Key, _Val, _KeyOfValue, _Compare>::_M_insert_unique(const _Val& __v) {
+  typedef std::pair<iterator, bool> _Res;
+#ifdef USE_OFFSET
+  std::pair<ptrdiff_t, ptrdiff_t> __res =
+      _M_get_insert_unique_pos_offset(_KeyOfValue()(__v));
+  if (__res.second != -1) {
+    return _Res(_M_insert_offset_(__res.first, __res.second, __v), true);
+  }
 
-iterator __before = __pos;
-if(__pos._M_node == _M_leftmost()) {
-return _Res(this->alloc_.Ptr2Offset(_M_leftmost()), this->alloc_.Ptr2Offset(_M_leftmost()));
-} else if(_M_key_compare(_S_key((--__before)._M_node), __k)) {
-if(_S_right(__before._M_node) == 0) {
-return _Res(-1, this->alloc_.Ptr2Offset(__before._M_node));
-} else {
-return _Res(this->alloc_.Ptr2Offset(__pos._M_node), this->alloc_.Ptr2Offset(__pos._M_node));
-}
-} else {
-return _M_get_insert_unique_pos_offset(__k);
+  return _Res(iterator(this->alloc_.Offset2Ptr(__res.first)), false);
+#else
+  std::pair<_Link_type, _Link_type> __res =
+      _M_get_insert_unique_pos(_KeyOfValue(__v));
+  if (__res.second != NULL) {
+    return _Res(_M_insert_(__res.first, __res.second, __v), true);
+  }
+  return _Res(iterator(__res.first), false);
+#endif
 }
 
-} else if(_M_key_compare(_S_key(__pos._M_node), __k)) {
+template <typename _Key, typename _Val, typename _KeyOfValue, typename _Compare>
+typename _Rb_tree<_Key, _Val, _KeyOfValue, _Compare>::iterator
+_Rb_tree<_Key, _Val, _KeyOfValue, _Compare>::_M_insert_unique_(
+    const_iterator __position, const _Val& __v) {
+#ifdef USE_OFFSET
+  std::pair<ptrdiff_t, ptrdiff_t> __res =
+      _M_get_insert_hint_unique_pos_offset(__position, _KeyOfValue()(__v));
+  if (__res.second != -1) {
+    return _M_insert_offset(__res.first, __res.second, __v);
+  }
+  return iterator(alloc_.Offset2(__res.first));
+#else
+  std::pair<_Link_type, _Link_type> __res =
+      _M_get_insert_hint_unique_pos(__position, _KeyOfValue()(__v));
+  if (__res.second != NULL) {
+    return _M_insert(__res.first, __res.second, __y);
+  }
+  return iterator(__res.first);
+#endif
+}
 
-iterator __after = __pos;
-if(__pos._M_node == _M_rightmost()) {
-return _Res(-1, this->alloc_.Ptr2Offset(_M_rightmost()));
-} else if(_M_key_compare(__k, _S_key((++__after)._M_node))) {
-if(_S_right(__pos._M_node) == 0) {
-return _Res(-1, this->alloc_.Ptr2Offset(__pos._M_node));
-} else {
-return _Res(this->alloc_.Ptr2Offset(__after._M_node), this->alloc_.Ptr2Offset(__after._M_node));
-}
-} else {
-return _M_get_insert_unique_pos_offset(__k);
-}
-
-} else {
-return _Res(this->alloc_.Ptr2Offset(__pos._M_node), 0);
-}
-}
-
+#ifdef USE_OFFSET
 template <typename _Key, typename _Val, typename _KeyOfValue, typename _Compare>
 std::pair<ptrdiff_t, ptrdiff_t>
 _Rb_tree<_Key, _Val, _KeyOfValue, _Compare>::_M_get_insert_unique_pos_offset(
@@ -759,6 +764,54 @@ _Rb_tree<_Key, _Val, _KeyOfValue, _Compare>::_M_get_insert_unique_pos_offset(
 }
 
 template <typename _Key, typename _Val, typename _KeyOfValue, typename _Compare>
+std::pair<ptrdiff_t, ptrdiff_t> _Rb_tree<_Key, _Val, _KeyOfValue, _Compare>::
+    _M_get_insert_hint_unique_pos_offset(const_iterator __position,
+                                         const key_type& __k) {
+  iterator __pos = __position._M_const_cast();
+  typedef std::pair<ptrdiff_t, ptrdiff_t> _Res;
+  if (__pos._M_node == _M_end()) {
+    if (size() > 0 && _M_key_compare(_S_key(_M_rightmost()), __k)) {
+      return _Res(-1, this->alloc_.Ptr2Offset(_M_rightmost()));
+    } else {
+      return _M_get_insert_unique_pos_offset(__k);
+    }
+  } else if (_M_key_compare(__k, _S_key(__pos._M_node))) {
+    iterator __before = __pos;
+    if (__pos._M_node == _M_leftmost()) {
+      return _Res(this->alloc_.Ptr2Offset(_M_leftmost()),
+                  this->alloc_.Ptr2Offset(_M_leftmost()));
+    } else if (_M_key_compare(_S_key((--__before)._M_node), __k)) {
+      if (_S_right(__before._M_node) == 0) {
+        return _Res(-1, this->alloc_.Ptr2Offset(__before._M_node));
+      } else {
+        return _Res(this->alloc_.Ptr2Offset(__pos._M_node),
+                    this->alloc_.Ptr2Offset(__pos._M_node));
+      }
+    } else {
+      return _M_get_insert_unique_pos_offset(__k);
+    }
+
+  } else if (_M_key_compare(_S_key(__pos._M_node), __k)) {
+    iterator __after = __pos;
+    if (__pos._M_node == _M_rightmost()) {
+      return _Res(-1, this->alloc_.Ptr2Offset(_M_rightmost()));
+    } else if (_M_key_compare(__k, _S_key((++__after)._M_node))) {
+      if (_S_right(__pos._M_node) == 0) {
+        return _Res(-1, this->alloc_.Ptr2Offset(__pos._M_node));
+      } else {
+        return _Res(this->alloc_.Ptr2Offset(__after._M_node),
+                    this->alloc_.Ptr2Offset(__after._M_node));
+      }
+    } else {
+      return _M_get_insert_unique_pos_offset(__k);
+    }
+
+  } else {
+    return _Res(this->alloc_.Ptr2Offset(__pos._M_node), 0);
+  }
+}
+
+template <typename _Key, typename _Val, typename _KeyOfValue, typename _Compare>
 typename _Rb_tree<_Key, _Val, _KeyOfValue, _Compare>::iterator
 _Rb_tree<_Key, _Val, _KeyOfValue, _Compare>::_M_insert_offset_(
     ptrdiff_t __x, ptrdiff_t __p, const _Val& __v) {
@@ -769,30 +822,92 @@ _Rb_tree<_Key, _Val, _KeyOfValue, _Compare>::_M_insert_offset_(
       __insert_left, __z, alloc_.Offset2Ptr(__p), this->alloc_.Header());
   return iterator(__z);
 }
-
+#else
 template <typename _Key, typename _Val, typename _KeyOfValue, typename _Compare>
-std::pair<typename _Rb_tree<_Key, _Val, _KeyOfValue, _Compare>::iterator, bool>
-_Rb_tree<_Key, _Val, _KeyOfValue, _Compare>::_M_insert_unique(const _Val& __v) {
-  typedef std::pair<iterator, bool> _Res;
-  std::pair<ptrdiff_t, ptrdiff_t> __res =
-      _M_get_insert_unique_pos_offset(_KeyOfValue()(__v));
-
-  if (__res.second != -1) {
-    return _Res(_M_insert_offset_(__res.first, __res.second, __v), true);
+std::pair<
+    typename _Rb_tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::_Link_type,
+    typename _Rb_tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::_Link_type>
+_Rb_tree<_Key, _Val, _KeyOfValue, _Compare>::_M_get_insert_unique_pos(
+    const key_type& __k) {
+  typedef std::pair<_Link_type, _Link_type> _Res;
+  _Link_type __x = _M_begin();
+  _Link_type __y = _M_end();
+  bool __comp = true;
+  while (__x != NULL) {
+    __y = __x;
+    __comp = _M_key_compare(__k, _S_key(__x));
+    __x = __comp ? _S_left(__x) : _S_right(__x);
   }
-
-  return _Res(iterator(this->alloc_.Offset2Ptr(__res.first)), false);
+  iterator __j = iterator(__y);
+  if (__comp) {
+    if (__j == begin()) {
+      return _Res(__x, __y);
+    } else {
+      --__j;
+    }
+  }
+  if (_M_key_compare(_S_key(__j._M_node), __k)) return _Res(__x, __y);
+  return _Res(__j._M_node, NULL);
 }
 
 template <typename _Key, typename _Val, typename _KeyOfValue, typename _Compare>
-typename _Rb_tree<_Key, _Val, _KeyOfValue, _Compare>::iterator _Rb_tree<_Key, _Val, _KeyOfValue, _Compare>::_M_insert_unique_(const_iterator __position, const _Val& __v) {
-  std::pair<ptrdiff_t, ptrdiff_t> __res = _M_get_insert_hint_unique_pos_offset(__position, _KeyOfValue()(__v));
-  if(__res.second != -1) {
-    return _M_insert_offset(__res.first, __res.second, __v);
+std::pair<typename _Rb_tree<_Key, _Val, _KeyOfValue, _Compare>::_Link_type,
+          typename _Rb_tree<_Key, _Val, _KeyOfValue, _Compare>::_Link_type>
+_Rb_tree<_Key, _Val, _KeyOfValue, _Compare>::_M_get_insert_hint_unique_pos(
+    const_iterator __position, const key_type& __k) {
+  iterator __pos = __position._M_const_cast();
+  typedef std::pair<_Link_type, _Link_type> _Res;
+  if (__pos._M_node == _M_end()) {
+    if (size() > 0 && _M_key_compare(_S_key(_M_rightmost()), __k)) {
+      return _Res(NULL, _M_rightmost());
+    } else {
+      return _M_get_insert_unique_pos(__k);
+    }
+  } else if (_M_key_compare(__k, _S_key(__pos._M_node))) {
+    iterator __before = __pos;
+    if (__pos._M_node == _M_leftmost()) {
+      return _Res(_M_leftmost(), _M_leftmost());
+    } else if (_M_key_compare(_S_key((--__before)._M_node), __k)) {
+      if (_S_right(__before._M_node) == 0) {
+        return _Res(NULL, __before._M_node);
+      } else {
+        return _Res(__pos._M_node, __pos._M_node);
+      }
+    } else {
+      return _M_get_insert_unique_pos(__k);
+    }
+  } else if (_M_key_compare(_S_key(__pos._M_node), __k)) {
+    iterator __after = __pos;
+    if (__pos._M_node == _M_rightmost()) {
+      return _Res(NULL, _M_rightmost());
+    } else if (_M_key_compare(__k, _S_key((++__after)._M_node))) {
+      if (_S_right(__pos._M_node) == 0) {
+        return _Res(NULL, __pos._M_node);
+      } else {
+        return _Res(__after._M_node, __after._M_node);
+      }
+    } else {
+      return _M_get_insert_unique_pos(__k);
+    }
+  } else {
+    return _Res(__pos._M_node, NULL);
   }
-  return iterator(__res.first);
 }
 
+template <typename _Key, typename _Val, typename _KeyOfValue, typename _Compare>
+typename _Rb_tree<_Key, _Val, _KeyOfValue, _Compare>::iterator
+_Rb_tree<_Key, _Val, _KeyOfValue, _Compare>::_M_insert_(_Link_type __x,
+                                                        _Link_type __p,
+                                                        const _Val& __v) {
+  bool __insert_left = (__x != NULL || __p == _M_end() ||
+                        _M_key_compare(_KeyOfValue()(__v), _S_key(__p)));
+  ptrdiff_t __p_offset = alloc_.Ptr2Offset(__p);
+  _Link_type __z = _M_create_node(__v);
+  _Rb_tree_insert_and_rebalance<_Val>(
+      __insert_left, __z, alloc_.Offset2Ptr(__p_offset), this->alloc_.Header());
+  return iterator(__z);
+}
+#endif
 
 template <typename _Key, typename _Val, typename _KeyOfValue, typename _Compare>
 void _Rb_tree<_Key, _Val, _KeyOfValue, _Compare>::_M_erase_aux(
