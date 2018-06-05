@@ -75,9 +75,9 @@ class rmap {
 
   mapped_type& operator[](const key_type& __k) {
     iterator __i = lower_bound(__k);
-    printf("lower-bound: %d - %d", __i->first, __i->second);
-    if (__i == end() || key_comp()(__k, (*__i).first))
+    if (__i == end() || key_comp()(__k, (*__i).first)) {
       __i = insert(__i, value_type(__k, mapped_type()));
+    }
     return (*__i).second;
   }
 
@@ -104,12 +104,10 @@ class rmap {
   const_iterator find(const key_type& __x) const { return _M_t.find(__x); }
 
   iterator lower_bound(const key_type& __x) { 
-    printf("lower-bound-1: %d\n", __x);
     return _M_t.lower_bound(__x); 
   }
 
   const_iterator lower_bound(const key_type& __x) const {
-    printf("lower-bound-2: %d\n", __x);
     return _M_t.lower_bound(__x);
   }
 };

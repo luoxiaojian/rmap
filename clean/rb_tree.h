@@ -3,10 +3,12 @@
 
 #include <iterator>
 #include <utility>
+#include <limits>
 
 #include "allocator.h"
 
 // #define USE_OFFSET
+#define DULL (std::numeric_limits<ptrdiff_t>::max())
 
 enum _Rb_tree_color { _S_red = false, _S_black = true };
 
@@ -23,22 +25,22 @@ struct _Rb_tree_node {
   _Val _M_value_field;
 
   static _Link_type _S_minimum(_Link_type __x) {
-    while (__x->_M_left != 0) __x += __x->_M_left;
+    while (__x->_M_left != DULL) __x += __x->_M_left;
     return __x;
   }
 
   static _Const_Link_type _S_minimum(_Const_Link_type __x) {
-    while (__x->_M_left != 0) __x += __x->_M_left;
+    while (__x->_M_left != DULL) __x += __x->_M_left;
     return __x;
   }
 
   static _Link_type _S_maximum(_Link_type __x) {
-    while (__x->_M_right != 0) __x += __x->_M_right;
+    while (__x->_M_right != DULL) __x += __x->_M_right;
     return __x;
   }
 
   static _Const_Link_type _S_maximum(_Const_Link_type __x) {
-    while (__x->_M_right != 0) __x += __x->_M_right;
+    while (__x->_M_right != DULL) __x += __x->_M_right;
     return __x;
   }
 
@@ -52,25 +54,25 @@ struct _Rb_tree_node {
     // return std::__addressof(_M_value_field);
   }
 
-  _Link_type parent() { return _M_parent ? this + _M_parent : NULL; }
+  _Link_type parent() { return _M_parent == DULL ? NULL : this + _M_parent; }
 
   _Const_Link_type parent() const {
-    return _M_parent ? this + _M_parent : NULL;
+    return _M_parent == DULL ? NULL : this + _M_parent;
   }
 
-  _Link_type left() { return _M_left ? this + _M_left : NULL; }
+  _Link_type left() { return _M_left == DULL ? NULL : this + _M_left; }
 
-  _Const_Link_type left() const { return _M_left ? this + _M_left : NULL; }
+  _Const_Link_type left() const { return _M_left == DULL ? NULL : this + _M_left; }
 
-  _Link_type right() { return _M_right ? this + _M_right : NULL; }
+  _Link_type right() { return _M_right == DULL ? NULL : this + _M_right; }
 
-  _Const_Link_type right() const { return _M_right ? this + _M_right : NULL; }
+  _Const_Link_type right() const { return _M_right == DULL ? NULL : this + _M_right; }
 
-  void SetLeft(_Const_Link_type ptr) { _M_left = ptr ? ptr - this : 0; }
+  void SetLeft(_Const_Link_type ptr) { _M_left = ptr ? ptr - this : DULL; }
 
-  void SetRight(_Const_Link_type ptr) { _M_right = ptr ? ptr - this : 0; }
+  void SetRight(_Const_Link_type ptr) { _M_right = ptr ? ptr - this : DULL; }
 
-  void SetParent(_Const_Link_type ptr) { _M_parent = ptr ? ptr - this : 0; }
+  void SetParent(_Const_Link_type ptr) { _M_parent = ptr ? ptr - this : DULL; }
 };
 
 template <typename _Val>
@@ -85,9 +87,9 @@ _Rb_tree_node<_Val>* _Rb_tree_rebalance_for_erase(
 
 template <typename _Val>
 _Rb_tree_node<_Val>* _Rb_tree_increment(_Rb_tree_node<_Val>* __x) throw() {
-  if (__x->_M_right != 0) {
+  if (__x->_M_right != DULL) {
     __x = __x->right();
-    while (__x->_M_left != 0) __x = __x->left();
+    while (__x->_M_left != DULL) __x = __x->left();
   } else {
     _Rb_tree_node<_Val>* __y = __x->parent();
     while (__x == __y->right()) {
@@ -103,9 +105,9 @@ template <typename _Val>
 const _Rb_tree_node<_Val>* _Rb_tree_increment(
     const _Rb_tree_node<_Val>* __cx) throw() {
   _Rb_tree_node<_Val>* __x = const_cast<_Rb_tree_node<_Val>*>(__cx);
-  if (__x->_M_right != 0) {
+  if (__x->_M_right != DULL) {
     __x = __x->right();
-    while (__x->_M_left != 0) __x = __x->left();
+    while (__x->_M_left != DULL) __x = __x->left();
   } else {
     _Rb_tree_node<_Val>* __y = __x->parent();
     while (__x == __y->right()) {
@@ -121,9 +123,9 @@ template <typename _Val>
 _Rb_tree_node<_Val>* _Rb_tree_decrement(_Rb_tree_node<_Val>* __x) throw() {
   if (__x->_M_color == _S_red && __x->parent()->parent() == __x) {
     __x = __x->right();
-  } else if (__x->_M_left != 0) {
+  } else if (__x->_M_left != DULL) {
     _Rb_tree_node<_Val>* __y = __x->left();
-    while (__y->_M_right != 0) __y = __y->right();
+    while (__y->_M_right != DULL) __y = __y->right();
     __x = __y;
   } else {
     _Rb_tree_node<_Val>* __y = __x->parent();
@@ -142,9 +144,9 @@ const _Rb_tree_node<_Val>* _Rb_tree_decrement(
   _Rb_tree_node<_Val>* __x = const_cast<_Rb_tree_node<_Val>*>(__cx);
   if (__x->_M_color == _S_red && __x->parent()->parent() == __x) {
     __x = __x->right();
-  } else if (__x->_M_left != 0) {
+  } else if (__x->_M_left != DULL) {
     _Rb_tree_node<_Val>* __y = __x->left();
-    while (__y->_M_right != 0) __y = __y->right();
+    while (__y->_M_right != DULL) __y = __y->right();
     __x = __y;
   } else {
     _Rb_tree_node<_Val>* __y = __x->parent();
@@ -321,8 +323,8 @@ class _Rb_tree {
   _Link_type _M_clone_node(_Const_Link_type __x) {
     _Link_type __tmp = _M_create_node(__x->_M_value_field);
     __tmp->_M_color = __x->_M_color;
-    __tmp->_M_left = 0;
-    __tmp->_M_right = 0;
+    __tmp->_M_left = DULL;
+    __tmp->_M_right = DULL;
     return __tmp;
   }
 
@@ -425,7 +427,8 @@ class _Rb_tree {
 
  public:
   _Rb_tree(allocator_type& alloc) : alloc_(alloc) {
-    alloc_[0]._M_parent = 0; 
+    alloc_[0]._M_color = _S_red;
+    alloc_[0]._M_parent = DULL; 
     alloc_[0]._M_left = 0;
     alloc_[0]._M_right = 0;
   }
@@ -459,9 +462,9 @@ class _Rb_tree {
 
   const_iterator end() const { return const_iterator(&this->alloc_.Header()); }
 
-  bool empty() const { return alloc_.Size() == 0; }
+  bool empty() const { return alloc_.Count() == 0; }
 
-  size_type size() const { return alloc_.Size(); }
+  size_type size() const { return alloc_.Count(); }
 
   size_type max_size() const { return alloc_.Capacity(); }
 
@@ -505,12 +508,10 @@ class _Rb_tree {
   size_type count(const key_type& __k) const;
 
   iterator lower_bound(const key_type& __k) {
-    printf("lower-bound-1: %d\n", __k);
     return _M_lower_bound(_M_begin(), _M_end(), __k);
   }
 
   const_iterator lower_bound(const key_type& __k) const {
-    printf("lower-bound-2: %d\n", __k);
     return _M_lower_bound(_M_begin(), _M_end(), __k);
   }
 
@@ -566,7 +567,6 @@ _Rb_tree<_Key, _Val, _KeyOfValue, _Compare>::_M_lower_bound(_Link_type __x,
                                                             _Link_type __y,
                                                             const _Key& __k) {
   while (__x != NULL) {
-    printf("--- %d vs. %d\n", _S_key(__x), __k);
     if (!_M_key_compare(_S_key(__x), __k))
       __y = __x, __x = _S_left(__x);
     else
@@ -580,7 +580,6 @@ typename _Rb_tree<_Key, _Val, _KeyOfValue, _Compare>::const_iterator
 _Rb_tree<_Key, _Val, _KeyOfValue, _Compare>::_M_lower_bound(
     _Const_Link_type __x, _Const_Link_type __y, const _Key& __k) const {
   while (__x != NULL) {
-    printf("--- %d vs. %d\n", _S_key(__x), __k);
     if (!_M_key_compare(_S_key(__x), __k))
       __y = __x, __x = _S_left(__x);
     else
@@ -824,6 +823,7 @@ _Rb_tree<_Key, _Val, _KeyOfValue, _Compare>::_M_insert_offset_(
   _Link_type __z = _M_create_node(__v);
   _Rb_tree_insert_and_rebalance<_Val>(
       __insert_left, __z, alloc_.Offset2Ptr(__p), this->alloc_.Header());
+  alloc_.Inc();
   return iterator(__z);
 }
 #else
@@ -908,6 +908,7 @@ _Rb_tree<_Key, _Val, _KeyOfValue, _Compare>::_M_insert_(_Link_type __x,
   _Link_type __z = _M_create_node(__v);
   _Rb_tree_insert_and_rebalance<_Val>(
       __insert_left, __z, alloc_.Offset2Ptr(__p_offset), this->alloc_.Header());
+  alloc_.Inc();
   return iterator(__z);
 }
 #endif
@@ -918,6 +919,7 @@ void _Rb_tree<_Key, _Val, _KeyOfValue, _Compare>::_M_erase_aux(
   _Link_type __y = static_cast<_Link_type>(_Rb_tree_rebalance_for_erase<_Val>(
       const_cast<_Link_type>(__position._M_node), this->alloc_.Header()));
   _M_destroy_node(__y);
+  alloc_.Dec();
 }
 
 template <typename _Key, typename _Val, typename _KeyOfValue, typename _Compare>
@@ -1004,7 +1006,7 @@ void _Rb_tree_rotate_left(_Rb_tree_node<_Val>* const __x,
                           _Rb_tree_node<_Val>& __header) {
   _Rb_tree_node<_Val>* const __y = __x->right();
   __x->SetRight(__y->left());
-  if (__y->_M_left != 0) {
+  if (__y->_M_left != DULL) {
     __y->left()->SetParent(__x);
   }
   __y->SetParent(__x->parent());
@@ -1025,7 +1027,7 @@ void _Rb_tree_rotate_right(_Rb_tree_node<_Val>* const __x,
                            _Rb_tree_node<_Val>& __header) {
   _Rb_tree_node<_Val>* const __y = __x->left();
   __x->SetLeft(__y->right());
-  if (__y->_M_right != 0) {
+  if (__y->_M_right != DULL) {
     __y->right()->SetParent(__x);
   }
   __y->SetParent(__x->parent());
@@ -1109,16 +1111,16 @@ template <typename _Val>
 _Rb_tree_node<_Val>* _Rb_tree_rebalance_for_erase(
     _Rb_tree_node<_Val>* const __z, _Rb_tree_node<_Val>& __header) throw() {
   _Rb_tree_node<_Val>* __y = __z;
-  _Rb_tree_node<_Val>* __x = 0;
-  _Rb_tree_node<_Val>* __x_parent = 0;
+  _Rb_tree_node<_Val>* __x = NULL;
+  _Rb_tree_node<_Val>* __x_parent = NULL;
 
-  if (__y->_M_left == 0) {
+  if (__y->_M_left == DULL) {
     __x = __y->right();
-  } else if (__y->_M_right == 0) {
+  } else if (__y->_M_right == DULL) {
     __x = __y->left();
   } else {
     __y = __y->right();
-    while (__y->_M_left != 0) {
+    while (__y->_M_left != DULL) {
       __y = __y->left();
     }
     __x = __y->right();
@@ -1162,7 +1164,7 @@ _Rb_tree_node<_Val>* _Rb_tree_rebalance_for_erase(
       }
 
       if (__header.left() == __z) {
-        if (__z->_M_right == 0) {
+        if (__z->_M_right == DULL) {
           __header.SetLeft(__z->parent());
         } else {
           __header.SetLeft(_Rb_tree_node<_Val>::_S_minimum(__x));
@@ -1170,7 +1172,7 @@ _Rb_tree_node<_Val>* _Rb_tree_rebalance_for_erase(
       }
 
       if (__header.right() == __z) {
-        if (__z->_M_left == 0) {
+        if (__z->_M_left == DULL) {
           __header.SetRight(__z->parent());
         } else {
           __header.SetRight(_Rb_tree_node<_Val>::_S_maximum(__x));
@@ -1190,13 +1192,13 @@ _Rb_tree_node<_Val>* _Rb_tree_rebalance_for_erase(
           local_Rb_tree_rotate_left(__x_parent, __header);
           __w = __x->parent()->right();
         }
-        if ((__w->_M_left == 0 || __w->left()->_M_color == _S_black) &&
-            (__w->_M_right == 0 || __w->right()->_M_color == _S_black)) {
+        if ((__w->_M_left == DULL || __w->left()->_M_color == _S_black) &&
+            (__w->_M_right == DULL || __w->right()->_M_color == _S_black)) {
           __w->_M_color = _S_red;
           __x = __x_parent;
           __x_parent = __x_parent->parent();
         } else {
-          if (__w->_M_right == 0 || __w->right()->_M_color == _S_black) {
+          if (__w->_M_right == DULL || __w->right()->_M_color == _S_black) {
             __w->left()->_M_color = _S_black;
             __w->_M_color = _S_red;
             local_Rb_tree_rotate_right(__w, __header);
@@ -1204,7 +1206,7 @@ _Rb_tree_node<_Val>* _Rb_tree_rebalance_for_erase(
           }
           __w->_M_color = __x_parent->_M_color;
           __x_parent->_M_color = _S_black;
-          if (__w->_M_right) __w->right()->_M_color = _S_black;
+          if (__w->_M_right != DULL) __w->right()->_M_color = _S_black;
           local_Rb_tree_rotate_left(__x_parent, __header);
           break;
         }
@@ -1216,13 +1218,13 @@ _Rb_tree_node<_Val>* _Rb_tree_rebalance_for_erase(
           local_Rb_tree_rotate_right(__x_parent, __header);
           __w = __x_parent->left();
         }
-        if ((__w->_M_right == 0 || __w->right()->_M_color == _S_black) &&
-            (__w->_M_left == 0 || __w->left()->_M_color == _S_black)) {
+        if ((__w->_M_right == DULL || __w->right()->_M_color == _S_black) &&
+            (__w->_M_left == DULL || __w->left()->_M_color == _S_black)) {
           __w->_M_color = _S_red;
           __x = __x_parent;
           __x_parent = __x_parent->parent();
         } else {
-          if (__w->_M_left == 0 || __w->left()->_M_color == _S_black) {
+          if (__w->_M_left == DULL || __w->left()->_M_color == _S_black) {
             __w->right()->_M_color = _S_black;
             __w->_M_color = _S_red;
             local_Rb_tree_rotate_left(__w, __header);
@@ -1230,7 +1232,7 @@ _Rb_tree_node<_Val>* _Rb_tree_rebalance_for_erase(
           }
           __w->_M_color = __x_parent->_M_color;
           __x_parent->_M_color = _S_black;
-          if (__w->_M_left) __w->left()->_M_color = _S_black;
+          if (__w->_M_left != DULL) __w->left()->_M_color = _S_black;
           local_Rb_tree_rotate_right(__x_parent, __header);
           break;
         }

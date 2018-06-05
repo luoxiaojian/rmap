@@ -13,7 +13,7 @@
 template <typename T>
 class Allocator {
  public:
-  Allocator() : size_(1), capacity_(BLOCK_SIZE) {
+  Allocator() : size_(1), capacity_(BLOCK_SIZE), count_(0) {
     buffer_ = reinterpret_cast<T *>(malloc(BLOCK_SIZE * sizeof(T)));
   }
 
@@ -48,6 +48,10 @@ class Allocator {
 
   inline size_t Capacity() const { return capacity_; }
 
+  inline int Count() const { return count_; }
+  inline void Dec() { --count_; }
+  inline void Inc() { ++count_; }
+
  private:
   inline void extend(size_t new_capacity) {
 #ifdef USE_REALLOC
@@ -69,6 +73,8 @@ class Allocator {
 
   T *buffer_;
   size_t size_, capacity_;
+
+  int count_;
 };
 
 #endif
