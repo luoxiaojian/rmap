@@ -32,6 +32,7 @@ vid_t get_gid(vid_t *cur, int fid, int fid_offset) {
 int main(int argc, char **argv) {
   if(argc < 4) {
     printf("usage: ./test_dump <fnum> <in_file> <dump_file>\n");
+    return 0;
   }
 
   int fnum = atoi(argv[1]);

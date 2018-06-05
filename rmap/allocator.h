@@ -10,7 +10,6 @@
 #include <sys/fcntl.h>
 #include <sys/file.h>
 #include <sys/mman.h>
-#include <sys/param.h>
 #include <sys/stat.h>
 #include <sys/unistd.h>
 #include <unistd.h>
@@ -62,7 +61,7 @@ class Allocator {
 
   T *GetNode() {
     if (state_ == ASLoaded) {
-      return;
+      return NULL;
     }
     if (size_ == capacity_) {
       extend(capacity_ << 1);
