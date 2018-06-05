@@ -66,15 +66,9 @@ struct _Rb_tree_node {
 
   _Const_Link_type right() const { return _M_right ? this + _M_right : NULL; }
 
-  // void SetLeft(_Link_type ptr) { _M_left = ptr ? ptr - this : 0; }
-
-  // void SetRight(_Link_type ptr) { _M_right = ptr ? ptr - this : 0; }
-
   void SetLeft(_Const_Link_type ptr) { _M_left = ptr ? ptr - this : 0; }
 
   void SetRight(_Const_Link_type ptr) { _M_right = ptr ? ptr - this : 0; }
-
-  // void SetParent(_Link_type ptr) { _M_parent = ptr ? ptr - this : 0; }
 
   void SetParent(_Const_Link_type ptr) { _M_parent = ptr ? ptr - this : 0; }
 };
@@ -169,7 +163,6 @@ struct _Rb_tree_iterator {
   typedef _Tp& reference;
   typedef _Tp* pointer;
 
-  // typedef bidirectional_iterator_tag iterator_category;
   typedef ptrdiff_t difference_type;
 
   typedef _Rb_tree_iterator<_Tp> _Self;
@@ -220,7 +213,6 @@ struct _Rb_tree_const_iterator {
 
   typedef _Rb_tree_iterator<_Tp> iterator;
 
-  // typedef bidirectional_iterator_tag iterator_category;
   typedef ptrdiff_t difference_type;
 
   typedef _Rb_tree_const_iterator<_Tp> _Self;
@@ -315,8 +307,6 @@ class _Rb_tree {
   _Link_type _M_create_node(const value_type& __x) {
     _Link_type __tmp = _M_get_node();
     new (__tmp->_M_valptr()) value_type(__x);
-    // __tmp->_M_value_field = __x;
-    // new (__tmp->_M_valptr()) __x;
     return __tmp;
   }
 
@@ -330,7 +320,6 @@ class _Rb_tree {
 
   _Link_type _M_clone_node(_Const_Link_type __x) {
     _Link_type __tmp = _M_create_node(__x->_M_value_field);
-    // _Link_type __tmp = _M_create_node(*__x->_M_valptr());
     __tmp->_M_color = __x->_M_color;
     __tmp->_M_left = 0;
     __tmp->_M_right = 0;
@@ -496,12 +485,12 @@ class _Rb_tree {
   void erase(const key_type* __first, const key_type* __last);
 
   void clear() {
-/*
-    _M_erase(_M_begin());
-    _M_leftmost() = _M_end();
-    _M_root() = 0;
-    _M_rightmost() = _M_end();
-*/
+    /*
+        _M_erase(_M_begin());
+        _M_leftmost() = _M_end();
+        _M_root() = 0;
+        _M_rightmost() = _M_end();
+    */
   }
 
   // Set operations.
@@ -664,38 +653,38 @@ _Rb_tree<_Key, _Val, _KeyOfValue, _Compare>::equal_range(
 template <typename _Key, typename _Val, typename _KeyOfValue, typename _Compare>
 void _Rb_tree<_Key, _Val, _KeyOfValue, _Compare>::swap(
     _Rb_tree<_Key, _Val, _KeyOfValue, _Compare>& __t) {
-/*
-  if (_M_root() == 0) {
-    if (__t._M_root() != 0) {
-      _M_root() = __t._M_root();
-      _M_leftmost() = __t._M_leftmost();
-      _M_rightmost() = __t._M_rightmost();
+  /*
+    if (_M_root() == 0) {
+      if (__t._M_root() != 0) {
+        _M_root() = __t._M_root();
+        _M_leftmost() = __t._M_leftmost();
+        _M_rightmost() = __t._M_rightmost();
+        _M_root()->_M_parent = _M_end();
+
+        __t._M_root() = 0;
+        __t._M_leftmost() = __t._M_end();
+        __t._M_rightmost() = __t._M_end();
+      }
+    } else if (__t._M_root() == 0) {
+      __t._M_root() = _M_root();
+      __t._M_leftmost() = _M_leftmost();
+      __t._M_rightmost() = _M_rightmost();
+      __t._M_root()->_M_parent = __t._M_end();
+
+      _M_root() = 0;
+      _M_leftmost() = _M_end();
+      _M_rightmost() = _M_end();
+    } else {
+      std::swap(_M_root(), __t._M_root());
+      std::swap(_M_leftmost(), __t._M_leftmost());
+      std::swap(_M_rightmost(), __t._M_rightmost());
+
       _M_root()->_M_parent = _M_end();
-
-      __t._M_root() = 0;
-      __t._M_leftmost() = __t._M_end();
-      __t._M_rightmost() = __t._M_end();
+      __t._M_root()->_M_parent = __t._M_end();
     }
-  } else if (__t._M_root() == 0) {
-    __t._M_root() = _M_root();
-    __t._M_leftmost() = _M_leftmost();
-    __t._M_rightmost() = _M_rightmost();
-    __t._M_root()->_M_parent = __t._M_end();
-
-    _M_root() = 0;
-    _M_leftmost() = _M_end();
-    _M_rightmost() = _M_end();
-  } else {
-    std::swap(_M_root(), __t._M_root());
-    std::swap(_M_leftmost(), __t._M_leftmost());
-    std::swap(_M_rightmost(), __t._M_rightmost());
-
-    _M_root()->_M_parent = _M_end();
-    __t._M_root()->_M_parent = __t._M_end();
-  }
-  // No need to swap header's color as it does not change.
-  std::swap(this->_M_key_compare, __t._M_key_compare);
-*/
+    // No need to swap header's color as it does not change.
+    std::swap(this->_M_key_compare, __t._M_key_compare);
+  */
 }
 
 template <typename _Key, typename _Val, typename _KeyOfValue, typename _Compare>
@@ -829,9 +818,8 @@ _Rb_tree<_Key, _Val, _KeyOfValue, _Compare>::_M_insert_offset_(
 }
 #else
 template <typename _Key, typename _Val, typename _KeyOfValue, typename _Compare>
-std::pair<
-    typename _Rb_tree<_Key, _Val, _KeyOfValue, _Compare>::_Link_type,
-    typename _Rb_tree<_Key, _Val, _KeyOfValue, _Compare>::_Link_type>
+std::pair<typename _Rb_tree<_Key, _Val, _KeyOfValue, _Compare>::_Link_type,
+          typename _Rb_tree<_Key, _Val, _KeyOfValue, _Compare>::_Link_type>
 _Rb_tree<_Key, _Val, _KeyOfValue, _Compare>::_M_get_insert_unique_pos(
     const key_type& __k) {
   typedef std::pair<_Link_type, _Link_type> _Res;
