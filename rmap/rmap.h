@@ -59,6 +59,10 @@ class rmap {
     return *this;
   }
 
+  void Load(const char* fname) { _M_alloc.Load(fname); }
+
+  void Dump(const char* fname) { _M_alloc.Dump(fname); }
+
   iterator begin() { return _M_t.begin(); }
 
   const_iterator begin() const { return _M_t.begin(); }
@@ -103,9 +107,7 @@ class rmap {
 
   const_iterator find(const key_type& __x) const { return _M_t.find(__x); }
 
-  iterator lower_bound(const key_type& __x) { 
-    return _M_t.lower_bound(__x); 
-  }
+  iterator lower_bound(const key_type& __x) { return _M_t.lower_bound(__x); }
 
   const_iterator lower_bound(const key_type& __x) const {
     return _M_t.lower_bound(__x);
