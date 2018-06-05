@@ -424,7 +424,11 @@ class _Rb_tree {
                                 const _Key& __k) const;
 
  public:
-  _Rb_tree(allocator_type& alloc) : alloc_(alloc) {}
+  _Rb_tree(allocator_type& alloc) : alloc_(alloc) {
+    alloc_[0]._M_parent = 0; 
+    alloc_[0]._M_left = 0;
+    alloc_[0]._M_right = 0;
+  }
   /*
   _Rb_tree(const _Rb_tree& __x)
       : _M_impl(__x._M_impl._M_key_compare,
@@ -501,10 +505,12 @@ class _Rb_tree {
   size_type count(const key_type& __k) const;
 
   iterator lower_bound(const key_type& __k) {
+    printf("lower-bound-1: %d\n", __k);
     return _M_lower_bound(_M_begin(), _M_end(), __k);
   }
 
   const_iterator lower_bound(const key_type& __k) const {
+    printf("lower-bound-2: %d\n", __k);
     return _M_lower_bound(_M_begin(), _M_end(), __k);
   }
 
@@ -559,11 +565,13 @@ typename _Rb_tree<_Key, _Val, _KeyOfValue, _Compare>::iterator
 _Rb_tree<_Key, _Val, _KeyOfValue, _Compare>::_M_lower_bound(_Link_type __x,
                                                             _Link_type __y,
                                                             const _Key& __k) {
-  while (__x != 0)
+  while (__x != NULL) {
+    printf("--- %d vs. %d\n", _S_key(__x), __k);
     if (!_M_key_compare(_S_key(__x), __k))
       __y = __x, __x = _S_left(__x);
     else
       __x = _S_right(__x);
+  }
   return iterator(__y);
 }
 
@@ -571,11 +579,13 @@ template <typename _Key, typename _Val, typename _KeyOfValue, typename _Compare>
 typename _Rb_tree<_Key, _Val, _KeyOfValue, _Compare>::const_iterator
 _Rb_tree<_Key, _Val, _KeyOfValue, _Compare>::_M_lower_bound(
     _Const_Link_type __x, _Const_Link_type __y, const _Key& __k) const {
-  while (__x != 0)
+  while (__x != NULL) {
+    printf("--- %d vs. %d\n", _S_key(__x), __k);
     if (!_M_key_compare(_S_key(__x), __k))
       __y = __x, __x = _S_left(__x);
     else
       __x = _S_right(__x);
+  }
   return const_iterator(__y);
 }
 

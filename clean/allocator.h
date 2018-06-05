@@ -13,7 +13,7 @@
 template <typename T>
 class Allocator {
  public:
-  Allocator() : size_(0), capacity_(BLOCK_SIZE) {
+  Allocator() : size_(1), capacity_(BLOCK_SIZE) {
     buffer_ = reinterpret_cast<T *>(malloc(BLOCK_SIZE * sizeof(T)));
   }
 

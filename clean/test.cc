@@ -4,6 +4,7 @@
 
 int main(int argc, char **argv) {
   rmap<int, int> m;
+  printf("----\n");
 
   m[0] = 5;
   m[1] = 4;

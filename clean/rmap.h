@@ -41,8 +41,8 @@ class rmap {
       _Rep_type;
   typedef Allocator<_Rb_tree_node<value_type> > _Alloc_type;
 
-  _Rep_type _M_t;
   _Alloc_type _M_alloc;
+  _Rep_type _M_t;
 
  public:
   typedef typename _Rep_type::iterator iterator;
@@ -50,7 +50,7 @@ class rmap {
   typedef typename _Rep_type::size_type size_type;
   typedef typename _Rep_type::difference_type difference_type;
 
-  rmap() : _M_t(_M_alloc) {}
+  rmap() : _M_alloc(), _M_t(_M_alloc) {}
 
   rmap(const rmap& __x) : _M_t(__x._M_t) {}
 
@@ -75,6 +75,7 @@ class rmap {
 
   mapped_type& operator[](const key_type& __k) {
     iterator __i = lower_bound(__k);
+    printf("lower-bound: %d - %d", __i->first, __i->second);
     if (__i == end() || key_comp()(__k, (*__i).first))
       __i = insert(__i, value_type(__k, mapped_type()));
     return (*__i).second;
@@ -102,9 +103,13 @@ class rmap {
 
   const_iterator find(const key_type& __x) const { return _M_t.find(__x); }
 
-  iterator lower_bound(const key_type& __x) { return _M_t.lower_bound(__x); }
+  iterator lower_bound(const key_type& __x) { 
+    printf("lower-bound-1: %d\n", __x);
+    return _M_t.lower_bound(__x); 
+  }
 
   const_iterator lower_bound(const key_type& __x) const {
+    printf("lower-bound-2: %d\n", __x);
     return _M_t.lower_bound(__x);
   }
 };
