@@ -39,7 +39,7 @@ class rmap {
  private:
   typedef _Rb_tree<key_type, value_type, S1st<value_type>, key_compare>
       _Rep_type;
-  typedef Allocator<_Rb_tree_node<value_type> > _Alloc_type;
+  typedef _Rb_tree_impl<_Rb_tree_node<value_type> > _Alloc_type;
 
   _Alloc_type _M_alloc;
   _Rep_type _M_t;

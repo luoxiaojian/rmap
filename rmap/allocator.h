@@ -23,7 +23,7 @@
 
 template <typename _Val>
 class _Rb_tree_impl {
-  static_assert(std::is_pod<_Val>::value, "T must be POD");
+  // static_assert(std::is_pod<_Val>::value, "T must be POD");
 
  private:
   enum _Rb_tree_impl_state {
@@ -132,7 +132,7 @@ class _Rb_tree_impl {
     }
 
     capacity_ = size_;
-    buffer_ = reinterpret_cast<_Val *>(mapped_buffer_ + sizeof(size_t));
+    buffer_ = reinterpret_cast<_Val *>(reinterpret_cast<size_t *>(mapped_buffer_) + 1);
     state_ = RBLoaded;
   }
 

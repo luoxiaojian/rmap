@@ -293,7 +293,7 @@ class _Rb_tree {
   typedef const _Rb_tree_node<_Val>* _Const_Link_type;
   typedef size_t size_type;
   typedef ptrdiff_t difference_type;
-  typedef Allocator<_Rb_tree_node<_Val> > allocator_type;
+  typedef _Rb_tree_impl<_Rb_tree_node<_Val> > allocator_type;
 
  private:
   _Rb_tree_impl<_Rb_tree_node<_Val> >& impl_;
