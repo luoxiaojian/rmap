@@ -1,7 +1,6 @@
 #ifndef RMAP_H_
 #define RMAP_H_
 
-#include "allocator.h"
 #include "rb_tree.h"
 
 template <typename _Pair>

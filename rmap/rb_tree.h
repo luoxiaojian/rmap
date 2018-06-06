@@ -5,7 +5,7 @@
 #include <limits>
 #include <utility>
 
-#include "allocator.h"
+#include "rb_tree_impl.h"
 
 // #define USE_OFFSET
 #define DULL (std::numeric_limits<ptrdiff_t>::max())
@@ -602,38 +602,8 @@ _Rb_tree<_Key, _Val, _KeyOfValue, _Compare>::equal_range(
 template <typename _Key, typename _Val, typename _KeyOfValue, typename _Compare>
 void _Rb_tree<_Key, _Val, _KeyOfValue, _Compare>::swap(
     _Rb_tree<_Key, _Val, _KeyOfValue, _Compare>& __t) {
-  /*
-    if (_M_root() == 0) {
-      if (__t._M_root() != 0) {
-        _M_root() = __t._M_root();
-        _M_leftmost() = __t._M_leftmost();
-        _M_rightmost() = __t._M_rightmost();
-        _M_root()->_M_parent = _M_end();
-
-        __t._M_root() = 0;
-        __t._M_leftmost() = __t._M_end();
-        __t._M_rightmost() = __t._M_end();
-      }
-    } else if (__t._M_root() == 0) {
-      __t._M_root() = _M_root();
-      __t._M_leftmost() = _M_leftmost();
-      __t._M_rightmost() = _M_rightmost();
-      __t._M_root()->_M_parent = __t._M_end();
-
-      _M_root() = 0;
-      _M_leftmost() = _M_end();
-      _M_rightmost() = _M_end();
-    } else {
-      std::swap(_M_root(), __t._M_root());
-      std::swap(_M_leftmost(), __t._M_leftmost());
-      std::swap(_M_rightmost(), __t._M_rightmost());
-
-      _M_root()->_M_parent = _M_end();
-      __t._M_root()->_M_parent = __t._M_end();
-    }
-    // No need to swap header's color as it does not change.
-    std::swap(this->_M_key_compare, __t._M_key_compare);
-  */
+  std::swap(_M_key_compare, __t._M_key_compare);
+  impl_.swap(__t.impl_);
 }
 
 template <typename _Key, typename _Val, typename _KeyOfValue, typename _Compare>

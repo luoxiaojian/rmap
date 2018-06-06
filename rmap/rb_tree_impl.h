@@ -132,7 +132,8 @@ class _Rb_tree_impl {
     }
 
     capacity_ = size_;
-    buffer_ = reinterpret_cast<_Val *>(reinterpret_cast<size_t *>(mapped_buffer_) + 1);
+    buffer_ = reinterpret_cast<_Val *>(
+        reinterpret_cast<size_t *>(mapped_buffer_) + 1);
     state_ = RBLoaded;
   }
 
@@ -142,6 +143,14 @@ class _Rb_tree_impl {
     state_ = RBInited;
     memcpy(buffer_, rhs.buffer_, sizeof(_Val) * size_);
     return *this;
+  }
+
+  void Swap(_Rb_tree_impl &rhs) {
+    std::swap(buffer_, rhs.buffer_);
+    std::swap(size_, rhs.size_);
+    std::swap(state_, rhs.state_);
+    std::swap(mapped_buffer_, rhs.mapped_buffer_);
+    std::swap(mapped_size_, rhs.mapped_size_);
   }
 
  private:
